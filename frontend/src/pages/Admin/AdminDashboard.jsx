@@ -121,16 +121,16 @@ export default function AdminDashboard() {
     })
   }, [auditLogs, auditSearch])
 
-  const handleUserStatus = async (id, status) => {
-    if (!window.confirm(`Are you sure you want to ${status} this user?`)) return;
+  const handleStatusChange = async (userId, newStatus) => {
+    if (!window.confirm(`Are you sure you want to ${newStatus} this user?`)) return;
     try {
-      await axiosInstance.put(`/admin/users/${id}/status`, { status });
-      setPendingUsers(prev => prev.filter(u => u._id !== id));
-      if (status === 'active') {
+      await axiosInstance.put(`/admin/users/${userId}/status`, { status: newStatus });
+      setPendingUsers(prev => prev.filter(u => u._id !== userId));
+      if (newStatus === 'active') {
         fetchAll(); // Refresh stats and lists
       }
     } catch (err) {
-      alert(err.response?.data?.error || `Failed to ${status} user`);
+      alert(err.response?.data?.error || `Failed to ${newStatus} user`);
     }
   }
 
@@ -185,15 +185,15 @@ export default function AdminDashboard() {
                   </div>
                   {u.certificateUrl && (
                     <a href={`http://localhost:5000${u.certificateUrl}`} target="_blank" rel="noreferrer" className="text-xs text-sky-600 hover:underline mt-2 inline-block font-semibold">
-                      View Certificate
+                      View Document
                     </a>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleUserStatus(u._id, 'active')} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded shadow-sm transition-colors">
+                  <button onClick={() => handleStatusChange(u._id, 'active')} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded shadow-sm transition-colors">
                     Approve
                   </button>
-                  <button onClick={() => handleUserStatus(u._id, 'rejected')} className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded transition-colors dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400">
+                  <button onClick={() => handleStatusChange(u._id, 'rejected')} className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded transition-colors dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400">
                     Reject
                   </button>
                 </div>

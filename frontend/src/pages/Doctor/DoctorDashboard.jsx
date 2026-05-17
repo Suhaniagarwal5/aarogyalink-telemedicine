@@ -342,7 +342,7 @@ export default function DoctorDashboard() {
                           </div>
                           <div>
                             <div className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-0.5">
-                              {slot.bookedBy?.name ?? (slot.isBooked ? t('Patient') : t('Open Slot'))}
+                              {slot.proxyPatientName || slot.bookedBy?.name ?? (slot.isBooked ? t('Patient') : t('Open Slot'))}
                             </div>
                             <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                               {slot.time ?? slot.startTime}
@@ -375,7 +375,7 @@ export default function DoctorDashboard() {
                   <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-100 dark:border-slate-800">
                     <div>
                       <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-1">
-                        {selected.bookedBy?.name ?? t('Open Slot')}
+                        {selected.proxyPatientName || selected.bookedBy?.name ?? t('Open Slot')}
                       </h2>
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <Clock size={14} /> {selected.time ?? selected.startTime}

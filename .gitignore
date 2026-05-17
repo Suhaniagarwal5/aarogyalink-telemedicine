@@ -9,3 +9,5 @@ frontend/node_modules/
 frontend/dist/
 *.log
 .DS_Store
+backend/public/prescriptions/
+backend/public/uploads/

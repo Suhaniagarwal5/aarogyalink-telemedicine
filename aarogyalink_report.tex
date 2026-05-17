@@ -1,0 +1,145 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{enumitem}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={AarogyaLink Project Report},
+}
+
+\begin{document}
+
+% ---------------------------------------------------------
+% TITLE PAGE (Formatted based on Sutra AI Reference)
+% ---------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    % Uncomment the line below and upload 'logo.png' to Overleaf to include the JKLU logo
+    % \includegraphics[width=0.3\textwidth]{logo.png}\par\vspace{1cm} 
+    
+    {\scshape\LARGE Institute of Engineering and Technology (IET) \par}
+    \vspace{0.3cm}
+    {\scshape\Large JK Lakshmipat University, Jaipur \par}
+    \vspace{2cm}
+    {\scshape\Large B.Tech Project Report \par}
+    \vspace{1.5cm}
+    {\huge\bfseries AarogyaLink --- Rural Telemedicine Platform \par}
+    \vspace{0.5cm}
+    {\large AI-Powered Triage, Real-Time Queuing, and Background Processing \par}
+    
+    \vspace{2.5cm}
+    {\Large\itshape PREPARED BY (Group 7) \par}
+    \vspace{0.5cm}
+    {\Large Suhani Agarwal \par}
+    {\Large Gursneh Kaur \par}
+    {\Large Aryaman Bohra \par}
+    {\Large Nidhesh Soni \par}
+    
+    \vspace{2.5cm}
+    {\Large\itshape FACULTY GUIDE \par}
+    \vspace{0.5cm}
+    {\Large Dr. Amit Sinhal \par}
+    {\large Professor | Computer Science and Engineering \par}
+    
+    \vfill
+    {\large \textbf{May 2026} \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------
+% 1. ABSTRACT
+% ---------------------------------------------------------
+\section{Abstract}
+AarogyaLink is a comprehensive, bilingual (English/Hindi) telemedicine platform engineered to bridge the healthcare gap in rural India. The system connects rural patients and ASHA workers with specialized urban doctors through seamless video consultations. To ensure high availability and responsiveness under load, the platform implements a robust backend architecture utilizing Redis for caching and smart queuing, Server-Sent Events (SSE) for real-time updates, and native Node.js Worker Threads managed by BullMQ for CPU-intensive background processing. This report outlines the technical architecture, data modelling, and key technology integrations that power AarogyaLink.
+
+% ---------------------------------------------------------
+% 2. HIGH-LEVEL SYSTEM DESIGN
+% ---------------------------------------------------------
+\section{High-Level System Design}
+AarogyaLink employs a multi-tiered architecture based on the MERN stack (MongoDB, Express.js, React.js, Node.js) with several microservice-inspired components to handle concurrency and asynchronous workloads.
+
+\subsection{Architectural Components}
+\begin{itemize}[label=\textbullet]
+    \item \textbf{Client Layer:} A Vite-powered React 18 frontend utilizing Tailwind CSS and Framer Motion. It communicates with the backend via Axios, implementing a silent token-refresh interceptor to maintain secure, uninterrupted sessions.
+    \item \textbf{API Gateway \& Routing Layer:} An Express.js Node.js server that routes incoming HTTP requests. It acts as the primary orchestrator, verifying JWTs and enforcing Role-Based Access Control (RBAC) across four user tiers: Patient, Doctor, ASHA Worker, and Admin.
+    \item \textbf{Caching \& Message Broker Layer:} A Redis (ioredis) instance that serves a dual purpose: caching frequently accessed data (like doctor availability slots) and acting as the message broker for background job queues.
+    \item \textbf{Persistence Layer:} MongoDB, accessed via Mongoose, serves as the primary database for storing users, slots, bookings, and audit logs.
+\end{itemize}
+
+% ---------------------------------------------------------
+% 3. DATA MODELLING
+% ---------------------------------------------------------
+\section{Data Modelling}
+The MongoDB schema is designed for rapid querying and strict data integrity. Key models include:
+\begin{itemize}[label=\textbullet]
+    \item \textbf{User Model:} Stores authentication credentials, roles, and demographic data.
+    \item \textbf{Slot Model:} Represents doctor availability. Compound indexes on \texttt{\{doctorId, date, time\}} ensure rapid lookups and prevent overlapping schedule creations.
+    \item \textbf{Booking Model:} The core transactional entity linking a Patient, Doctor, and Slot. To prevent race conditions during high-traffic booking windows, the system utilizes MongoDB's atomic \texttt{findOneAndUpdate} operation, ensuring a single slot cannot be double-booked by concurrent requests.
+\end{itemize}
+
+% ---------------------------------------------------------
+% 4. APIs AND REAL-TIME COMMUNICATION
+% ---------------------------------------------------------
+\section{APIs and Real-Time Communication}
+Traditional HTTP polling is highly inefficient for live queues. AarogyaLink replaces polling with Server-Sent Events (SSE).
+
+\subsection{Server-Sent Events (SSE)}
+When a patient books a slot, they enter a virtual waiting room. Instead of the client repeatedly requesting its queue position, the server holds an open HTTP connection (SSE). Whenever a doctor completes a consultation, the backend calculates the new queue positions and pushes the updated data instantly to all connected clients. This drastically reduces network overhead and database reads.
+
+\subsection{AI Symptom Triage (Claude API)}
+During the booking process, patients submit their symptoms in natural language. A synchronous API call is made to the Anthropic Claude API. The LLM acts as an AI triage nurse, parsing the raw symptoms into a structured, professional clinical brief. This brief is saved to the Booking record, allowing the doctor to review it prior to the consultation.
+
+% ---------------------------------------------------------
+% 5. CACHING AND BACKGROUND PROCESSING
+% ---------------------------------------------------------
+\section{Caching and Background Processing}
+To meet the stringent performance requirements of a healthcare platform, CPU-intensive and read-heavy operations are offloaded from the main Node.js event loop.
+
+\subsection{Redis Cache-Aside Pattern}
+The \texttt{GET /api/slots} route is the most frequently accessed endpoint. To prevent MongoDB from bottlenecking under load, the system implements a cache-aside pattern. When slots are requested for a specific date, the backend first checks Redis. If a cache miss occurs, the data is fetched from MongoDB, serialized, and stored in Redis with a 5-minute Time-To-Live (TTL). Subsequent requests are served directly from RAM in less than 20ms.
+
+\subsection{BullMQ and Worker Threads (PDF Generation)}
+Generating PDF prescriptions using \texttt{pdfkit} is heavily CPU-bound. If executed on the main Node.js thread, it would block the event loop, causing all other incoming API requests to stall.
+\begin{itemize}
+    \item \textbf{Scenario:} A doctor clicks "Complete \& Generate PDF".
+    \item \textbf{Solution:} The backend immediately returns a HTTP 200 response to the doctor. Simultaneously, it enqueues a "pdf-generation" job into BullMQ (backed by Redis).
+    \item \textbf{Execution:} A dedicated BullMQ worker picks up the job and spawns a native Node.js \texttt{worker\_thread}. The PDF is generated entirely off the main event loop. Event loop lag testing confirmed this architecture reduced main-thread blockage from $>100ms$ down to near-zero ($14ms$).
+\end{itemize}
+
+% ---------------------------------------------------------
+% 6. TOOLS AND TECHNOLOGIES SUMMARY
+% ---------------------------------------------------------
+\section{Tools and Technologies Summary}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        \textbf{Technology} & \textbf{Application / Scenario} \\ \midrule
+        \textbf{React.js \& Vite} & Fast, responsive UI rendering and client-side routing. \\
+        \textbf{Node.js \& Express} & Non-blocking REST API server and SSE streaming. \\
+        \textbf{MongoDB} & Persistent data storage with atomic transactions. \\
+        \textbf{Redis} & Slot data caching and high-speed job queue storage. \\
+        \textbf{BullMQ} & Reliable background job processing (PDF generation). \\
+        \textbf{Worker Threads} & Offloading CPU-bound tasks to prevent event loop lag. \\
+        \textbf{Claude AI} & Natural language processing for symptom triage. \\
+        \textbf{i18next} & Dynamic localization switching (Hindi/English). \\ \bottomrule
+    \end{tabular}
+    \caption{Core Technologies and their scenarios}
+\end{table}
+
+\end{document}

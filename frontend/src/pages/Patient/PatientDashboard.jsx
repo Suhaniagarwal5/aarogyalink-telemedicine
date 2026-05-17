@@ -6,6 +6,7 @@ import axiosInstance from '../../api/axiosInstance'
 import { useQueuePosition } from '../../hooks/useQueuePosition'
 import { useTranslation } from 'react-i18next'
 import { Calendar, CheckCircle, Hash, Clock, User, AlertCircle, Activity, Download, ChevronRight, Star, X } from 'lucide-react'
+import VideoConsultation from '../../components/VideoConsultation'
 
 export default function PatientDashboard() {
   const { user } = useAuth()
@@ -28,6 +29,7 @@ export default function PatientDashboard() {
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [activeVideoRoom, setActiveVideoRoom] = useState(null)
 
   const queueInfo = useQueuePosition(
     booked ? bookedData?.booking?.doctorId : null,
@@ -266,14 +268,12 @@ export default function PatientDashboard() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
                       {bookedData?.booking?.videoLink && (
-                        <a
-                          href={bookedData.booking.videoLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => setActiveVideoRoom(bookedData.booking.videoLink.split('/').pop())}
                           className="px-5 py-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 text-sm font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors flex items-center gap-2"
                         >
                           {t('🎥 Join Video Call')}
-                        </a>
+                        </button>
                       )}
                       <button
                         onClick={handleReset}
@@ -377,10 +377,10 @@ export default function PatientDashboard() {
                           </a>
                         )}
                         {b.videoLink && b.status === 'booked' && (
-                          <a href={b.videoLink} target="_blank" rel="noopener noreferrer"
+                          <button onClick={() => setActiveVideoRoom(b.videoLink.split('/').pop())}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                             {t('🎥 Join Video Call')}
-                          </a>
+                          </button>
                         )}
                         {b.status === 'completed' && (
                           <button onClick={() => setReviewBooking(b)}
@@ -443,6 +443,15 @@ export default function PatientDashboard() {
         </div>
       )}
     </AnimatePresence>
+
+    {/* Video Consultation Overlay */}
+    {activeVideoRoom && (
+      <VideoConsultation 
+        roomName={activeVideoRoom} 
+        userName={user?.name || 'Patient'} 
+        onClose={() => setActiveVideoRoom(null)} 
+      />
+    )}
   </>
   )
 }

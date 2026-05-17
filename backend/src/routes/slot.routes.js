@@ -99,6 +99,7 @@ router.get('/doctor/:doctorId', auth, async (req, res) => {
           slot.symptomBrief = booking.symptomBrief;
           slot.bookingStatus = booking.status;
           slot.videoLink = booking.videoLink;
+          slot.proxyPatientName = booking.proxyPatientName;
         }
       }
     }

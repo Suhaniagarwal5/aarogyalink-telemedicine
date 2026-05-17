@@ -200,7 +200,7 @@ const completeBooking = async (req, res) => {
     // Queue background PDF generation
     await addPDFJob({
       bookingId: booking._id,
-      patientName: booking.patientId.name,
+      patientName: booking.proxyPatientName || booking.patientId.name,
       doctorName: booking.doctorId.name,
       symptomBrief: booking.symptomBrief,
       prescription: prescription

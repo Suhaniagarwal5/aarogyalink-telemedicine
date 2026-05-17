@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'active', 'rejected'],
     default: 'active'
+  },
+  certificateUrl: {
+    type: String
   }
 }, { timestamps: true });
 

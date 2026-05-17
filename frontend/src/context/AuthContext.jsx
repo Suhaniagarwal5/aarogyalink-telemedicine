@@ -23,12 +23,14 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const { data } = await axiosInstance.post('/auth/register', payload)
-    const token = data.accessToken || data.token
-    setUser(data.user)
-    localStorage.setItem('aarogya_user', JSON.stringify(data.user))
-    localStorage.setItem('aarogya_token', token)
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    return data.user
+    if (data.user) {
+      const token = data.accessToken || data.token
+      setUser(data.user)
+      localStorage.setItem('aarogya_user', JSON.stringify(data.user))
+      localStorage.setItem('aarogya_token', token)
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+    return data
   }, [])
 
   const logout = useCallback(async () => {

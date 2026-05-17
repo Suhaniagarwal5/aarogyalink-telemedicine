@@ -105,6 +105,7 @@ export default function AdminDashboard() {
   // useMemo: Filtered lists for Advanced Search
   const filteredDoctors = useMemo(() => {
     return doctors.filter(d => {
+      if (d?.userId?.status !== 'active') return false;
       const nameMatch = d?.userId?.name?.toLowerCase()?.includes(doctorSearch.toLowerCase()) || false;
       const specMatch = d?.specialty?.toLowerCase()?.includes(doctorSearch.toLowerCase()) || false;
       return nameMatch || specMatch;

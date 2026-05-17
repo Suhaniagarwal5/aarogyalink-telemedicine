@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
-import { UserCircle, Stethoscope, Activity, ShieldCheck, ArrowRight, ArrowLeft, AlertCircle, Cross } from 'lucide-react'
+import { UserCircle, Stethoscope, Activity, ShieldCheck, ArrowRight, ArrowLeft, AlertCircle, Cross, CheckSquare } from 'lucide-react'
 
 const ROLES = [
   {
@@ -42,6 +42,7 @@ export default function Login() {
   const [certificateFile, setCertificateFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const { t, i18n } = useTranslation()
 
   useEffect(() => {
@@ -55,16 +56,18 @@ export default function Login() {
     setSelectedRole(role)
     setMode('form')
     setError('')
+    setSuccessMsg('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMsg('')
     try {
       if (isRegister) {
-        if (selectedRole.key === 'doctor' && certificateFile) {
-          // send as form data if doctor
+        if ((selectedRole.key === 'doctor' || selectedRole.key === 'asha') && certificateFile) {
+          // send as form data if doctor or asha
           const formData = new FormData()
           formData.append('name', form.name)
           formData.append('email', form.email)
@@ -73,9 +76,19 @@ export default function Login() {
           formData.append('specialty', form.specialty)
           formData.append('phone', form.phone)
           formData.append('certificate', certificateFile)
-          await register(formData)
+          const res = await register(formData)
+          if (!res.user) {
+            setSuccessMsg('Account created successfully! Please wait for Admin approval to log in.')
+            setForm({ name: '', email: '', password: '', specialty: '', phone: '' })
+            setCertificateFile(null)
+          }
         } else {
-          await register({ ...form, role: selectedRole.key })
+          const res = await register({ ...form, role: selectedRole.key })
+          if (!res.user) {
+            setSuccessMsg('Account created successfully! Please wait for Admin approval to log in.')
+            setForm({ name: '', email: '', password: '', specialty: '', phone: '' })
+            setCertificateFile(null)
+          }
         }
       } else {
         await login(form.email, form.password, selectedRole.key)
@@ -187,7 +200,7 @@ export default function Login() {
                   {/* Back + role badge */}
                   <div className="flex items-center justify-between mb-5">
                     <button
-                      onClick={() => { setMode('select'); setError(''); setForm({ name: '', email: '', password: '', specialty: '', phone: '' }); setCertificateFile(null); setIsRegister(false) }}
+                      onClick={() => { setMode('select'); setError(''); setSuccessMsg(''); setForm({ name: '', email: '', password: '', specialty: '', phone: '' }); setCertificateFile(null); setIsRegister(false) }}
                       className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-medium"
                     >
                       <ArrowLeft size={15} /> {t('Back')}
@@ -203,7 +216,7 @@ export default function Login() {
                       {[[t('Sign In'), false], [t('Register'), true]].map(([label, val]) => (
                         <button
                           key={label}
-                          onClick={() => { setIsRegister(val); setError('') }}
+                          onClick={() => { setIsRegister(val); setError(''); setSuccessMsg('') }}
                           className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${isRegister === val ? 'bg-[#075985] text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                         >
                           {label}
@@ -259,19 +272,21 @@ export default function Login() {
                     </div>
 
                     <AnimatePresence>
-                      {isRegister && selectedRole?.key === 'doctor' && (
+                      {isRegister && (selectedRole?.key === 'doctor' || selectedRole?.key === 'asha') && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-4">
+                          {selectedRole?.key === 'doctor' && (
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t('Medical Specialty')}</label>
+                              <input
+                                type="text" required value={form.specialty}
+                                onChange={e => setForm({ ...form, specialty: e.target.value })}
+                                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]/40 focus:border-[#0284c7] text-sm transition-all"
+                                placeholder="e.g. General Medicine"
+                              />
+                            </div>
+                          )}
                           <div>
-                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t('Medical Specialty')}</label>
-                            <input
-                              type="text" required value={form.specialty}
-                              onChange={e => setForm({ ...form, specialty: e.target.value })}
-                              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0284c7]/40 focus:border-[#0284c7] text-sm transition-all"
-                              placeholder="e.g. General Medicine"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t('Upload Certificate')}</label>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t('Upload Document/Certificate')}</label>
                             <input
                               type="file" required onChange={e => setCertificateFile(e.target.files[0])}
                               accept=".pdf,.jpg,.jpeg,.png"
@@ -281,6 +296,12 @@ export default function Login() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {successMsg && (
+                      <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg border border-emerald-200 dark:border-emerald-900/50">
+                        <CheckSquare size={15} className="shrink-0" /> <span>{successMsg}</span>
+                      </div>
+                    )}
 
                     {error && (
                       <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-900/50">

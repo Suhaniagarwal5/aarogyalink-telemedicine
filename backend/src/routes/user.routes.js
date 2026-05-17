@@ -19,7 +19,7 @@ router.put('/profile', auth, updateProfile);
 router.get('/doctors', async (req, res) => {
   try {
     const doctors = await Doctor.find()
-      .populate('userId', 'name email phone')
+      .populate('userId', 'name email phone status')
       .select('userId specialty availableDays profilePhoto');
     res.json(doctors);
   } catch (err) {

@@ -70,10 +70,11 @@ router.post('/register', upload.single('certificate'), async (req, res) => {
 
     const status = (role === 'doctor' || role === 'asha') ? 'pending' : 'active';
 
-    const user = await User.create({ name, email, password, role, phone, status });
+    const certificateUrl = req.file ? `/uploads/profiles/${req.file.filename}` : null;
+    
+    const user = await User.create({ name, email, password, role, phone, status, certificateUrl });
 
     if (role === 'doctor') {
-      const certificateUrl = req.file ? `/uploads/profiles/${req.file.filename}` : null;
       await Doctor.create({
         userId: user._id,
         specialty: specialty || 'General Medicine',

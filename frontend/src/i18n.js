@@ -145,7 +145,20 @@ const resources = {
       "Add Slot": "Add Slot",
       "Adding...": "Adding...",
       "No slots scheduled on this date.": "No slots scheduled on this date.",
-      "+ Add a Slot": "+ Add a Slot"
+      "+ Add a Slot": "+ Add a Slot",
+      "New Patient Details": "New Patient Details",
+      "Enter details for the patient who requires a consultation.": "Enter details for the patient who requires a consultation.",
+      "Patient Name": "Patient Name",
+      "Enter full name": "Enter full name",
+      "Age": "Age",
+      "Gender": "Gender",
+      "Male": "Male",
+      "Female": "Female",
+      "Other": "Other",
+      "Village / Location": "Village / Location",
+      "Village name": "Village name",
+      "Symptoms": "Symptoms",
+      "Describe the medical issue...": "Describe the medical issue..."
     }
   },
   hi: {
@@ -290,7 +303,20 @@ const resources = {
       "Add Slot": "स्लॉट जोड़ें",
       "Adding...": "जोड़ रहा है...",
       "No slots scheduled on this date.": "इस तिथि पर कोई स्लॉट निर्धारित नहीं है।",
-      "+ Add a Slot": "+ एक स्लॉट जोड़ें"
+      "+ Add a Slot": "+ एक स्लॉट जोड़ें",
+      "New Patient Details": "नए मरीज का विवरण",
+      "Enter details for the patient who requires a consultation.": "परामर्श की आवश्यकता वाले मरीज का विवरण दर्ज करें।",
+      "Patient Name": "मरीज का नाम",
+      "Enter full name": "पूरा नाम दर्ज करें",
+      "Age": "आयु",
+      "Gender": "लिंग",
+      "Male": "पुरुष",
+      "Female": "महिला",
+      "Other": "अन्य",
+      "Village / Location": "गांव / स्थान",
+      "Village name": "गांव का नाम",
+      "Symptoms": "लक्षण",
+      "Describe the medical issue...": "चिकित्सा समस्या का वर्णन करें..."
     }
   }
 }

@@ -8,6 +8,7 @@ import {
   PlusCircle, Activity, FileText, Sparkles, CheckSquare, Wand2, Star
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import VideoConsultation from '../../components/VideoConsultation'
 
 const STATUS_MAP = {
   pending:   { bg: 'bg-amber-100 dark:bg-amber-900/20',   color: 'text-amber-600 dark:text-amber-400',   label: 'Open' },
@@ -39,6 +40,7 @@ export default function DoctorDashboard() {
   const [addError, setAddError] = useState('')
   const [addSuccess, setAddSuccess] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [activeVideoRoom, setActiveVideoRoom] = useState(null)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -342,7 +344,7 @@ export default function DoctorDashboard() {
                           </div>
                           <div>
                             <div className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-0.5">
-                              {slot.proxyPatientName || slot.bookedBy?.name ?? (slot.isBooked ? t('Patient') : t('Open Slot'))}
+                              {(slot.proxyPatientName || slot.bookedBy?.name) ?? (slot.isBooked ? t('Patient') : t('Open Slot'))}
                             </div>
                             <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                               {slot.time ?? slot.startTime}
@@ -375,7 +377,7 @@ export default function DoctorDashboard() {
                   <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-100 dark:border-slate-800">
                     <div>
                       <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-1">
-                        {selected.proxyPatientName || selected.bookedBy?.name ?? t('Open Slot')}
+                        {(selected.proxyPatientName || selected.bookedBy?.name) ?? t('Open Slot')}
                       </h2>
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <Clock size={14} /> {selected.time ?? selected.startTime}
@@ -409,14 +411,15 @@ export default function DoctorDashboard() {
                   {/* Video Call */}
                   {selected.isBooked && selected.videoLink && (
                     <div className="mb-6">
-                      <a
-                        href={selected.videoLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => {
+                          const roomName = selected.videoLink.split('/').pop()
+                          setActiveVideoRoom(roomName)
+                        }}
                         className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm"
                       >
                         🎥 Start Video Call
-                      </a>
+                      </button>
                     </div>
                   )}
 
@@ -493,6 +496,15 @@ export default function DoctorDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Video Consultation Overlay */}
+      {activeVideoRoom && (
+        <VideoConsultation 
+          roomName={activeVideoRoom} 
+          userName={`Dr. ${user?.name}`} 
+          onClose={() => setActiveVideoRoom(null)} 
+        />
+      )}
     </DashboardLayout>
   )
 }

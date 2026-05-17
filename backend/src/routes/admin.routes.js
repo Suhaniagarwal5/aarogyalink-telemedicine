@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 const AuditLog = require('../models/AuditLog');
 const { auth } = require('../middleware/auth');
 const { checkRole } = require('../middleware/rbac');

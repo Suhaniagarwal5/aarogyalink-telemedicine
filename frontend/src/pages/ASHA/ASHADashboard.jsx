@@ -325,9 +325,15 @@ export default function ASHADashboard() {
                             {t('🎥 Join Video Call')}
                           </button>
                         )}
+                        {booking.status === 'completed' && booking.prescriptionUrl && (
+                          <a href={`http://localhost:5005${booking.prescriptionUrl}`} target="_blank" rel="noopener noreferrer" 
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors">
+                            📄 {t('Download PDF')}
+                          </a>
+                        )}
                         {booking.status === 'completed' && booking.prescription && (
                           <button onClick={() => alert(booking.prescription)} className="text-xs font-bold text-[#0284c7] bg-sky-50 dark:bg-[#075985]/30 dark:text-[#38bdf8] px-3 py-1.5 rounded-lg hover:bg-sky-100 transition-colors">
-                            {t('View Prescription')}
+                            {t('View Notes')}
                           </button>
                         )}
                       </div>
